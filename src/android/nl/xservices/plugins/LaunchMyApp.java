@@ -1,6 +1,7 @@
 package nl.xservices.plugins;
 
 import android.content.Intent;
+import android.util.Log;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaInterface;
@@ -43,45 +44,69 @@ public class LaunchMyApp extends CordovaPlugin {
   public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
     if (ACTION_CLEARINTENT.equalsIgnoreCase(action)) {
       final Intent intent = this.cordova.getActivity().getIntent();
+      Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CLEARINTENT - intent:  " + intent.toString());
       if (resetIntent){
+        Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CLEARINTENT - intent:  " + intent.toString() + " RESET");
         intent.setData(null);
       }
       return true;
     } else if (ACTION_CHECKINTENT.equalsIgnoreCase(action)) {
       final Intent intent = this.cordova.getActivity().getIntent();
+      Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CHECKINTENT - intent:  " + intent.toString());
       final String intentString = intent.getDataString();
       if (intentString != null && intent.getScheme() != null) {
         lastIntentString = intentString;
+        Log.d("cordova-plugin-customurlscheme", "App was started with:  " + intentString);
         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, intent.getDataString()));
       } else {
+        Log.d("cordova-plugin-customurlscheme", "App was started with intent:  " + intent.toString());
+        if (intentString != null) {
+          Log.d("cordova-plugin-customurlscheme", "App was not started via expected scheme - string:  " + intentString);
+        }
+        if (intent.getScheme() != null) {
+          Log.d("cordova-plugin-customurlscheme", "App was not started via expected scheme - scheme:  " + intent.getScheme());
+        }
         callbackContext.error("App was not started via the launchmyapp URL scheme. Ignoring this errorcallback is the best approach.");
       }
       return true;
     } else if (ACTION_GETLASTINTENT.equalsIgnoreCase(action)) {
       if(lastIntentString != null) {
+        Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_GETLASTINTENT - lastIntentString:  " + lastIntentString);
+        Log.d("cordova-plugin-customurlscheme", "App was started with last intent: " + lastIntentString);
         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, lastIntentString));
       } else {
+        Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_GETLASTINTENT - lastIntentString is null!!");
+        Log.d("cordova-plugin-customurlscheme", "No intent received so far. ");
         callbackContext.error("No intent received so far.");
       }
       return true;
     } else {
       callbackContext.error("This plugin only responds to the " + ACTION_CHECKINTENT + " action.");
+      if (action != null) {
+        Log.d("cordova-plugin-customurlscheme", "App was started with unsupported action :  " + action);
+      } else {
+        Log.d("cordova-plugin-customurlscheme", "App was started with null action");
+      }
       return false;
     }
   }
 
   @Override
   public void onNewIntent(Intent intent) {
+    Log.d("cordova-plugin-customurlscheme", "onNewIntent:  " + intent.toString());
     final String intentString = intent.getDataString();
     if (intentString != null && intent.getScheme() != null) {
       if (resetIntent){
+        Log.d("cordova-plugin-customurlscheme", "onNewIntent:  " + intent.toString() + "  RESET" );
         intent.setData(null);
       }
       try {
         StringWriter writer = new StringWriter(intentString.length() * 2);
         escapeJavaStyleString(writer, intentString, true, false);
+        Log.d("cordova-plugin-customurlscheme", "sending new Intent to webView " + URLEncoder.encode(writer.toString()));
         webView.loadUrl("javascript:handleOpenURL('" + URLEncoder.encode(writer.toString()) + "');");
       } catch (IOException ignore) {
+        Log.d("cordova-plugin-customurlscheme", "error sending intent to webview: ", ignore);
       }
     }
   }
