@@ -15,6 +15,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URLEncoder;
 import java.util.Locale;
+import android.os.Bundle;
 
 public class LaunchMyApp extends CordovaPlugin {
 
@@ -53,7 +54,19 @@ public class LaunchMyApp extends CordovaPlugin {
     } else if (ACTION_CHECKINTENT.equalsIgnoreCase(action)) {
       final Intent intent = this.cordova.getActivity().getIntent();
       Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CHECKINTENT - intent:  " + intent.toString());
+
+      try {
+        Bundle data = intent.getExtras();
+        Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CHECKINTENT - bundle:  " + data.toString());
+      } catch (Exception e) {
+        e.printStackTrace();
+        Log.d("cordova-plugin-customurlscheme", "error parsing bundle: ", e);
+      }
+
       final String intentString = intent.getDataString();
+      if (intentString != null) {
+        Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CHECKINTENT - intentString:  " + intentString);
+      }
       if (intentString != null && intent.getScheme() != null) {
         lastIntentString = intentString;
         Log.d("cordova-plugin-customurlscheme", "App was started with:  " + intentString);
@@ -94,8 +107,24 @@ public class LaunchMyApp extends CordovaPlugin {
   @Override
   public void onNewIntent(Intent intent) {
     Log.d("cordova-plugin-customurlscheme", "onNewIntent:  " + intent.toString());
-    final String intentString = intent.getDataString();
-    if (intentString != null && intent.getScheme() != null) {
+    String intentString = intent.getDataString();
+    String intentScheme = intent.getScheme();
+    try {
+      String intentAction = intent.getAction();
+      Bundle data = intent.getExtras();
+      Log.d("cordova-plugin-customurlscheme", "onNewIntent action:  " + intentAction);
+      Log.d("cordova-plugin-customurlscheme", "onNewIntent data:  " + data.toString());
+      String deeplink = data.getString("deeplink");
+      Log.d("cordova-plugin-customurlscheme", "onNewIntent bundle deeplink:  " + deeplink);
+      if (deeplink != null) {
+        intentString = deeplink;
+        intentScheme = "vncmail";
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      Log.d("cordova-plugin-customurlscheme", "error parsing bundle: ", e);
+    }
+    if (intentString != null && intentScheme != null) {
       if (resetIntent){
         Log.d("cordova-plugin-customurlscheme", "onNewIntent:  " + intent.toString() + "  RESET" );
         intent.setData(null);
