@@ -52,12 +52,20 @@ public class LaunchMyApp extends CordovaPlugin {
       }
       return true;
     } else if (ACTION_CHECKINTENT.equalsIgnoreCase(action)) {
+      String intentDeeplinkString = "";
       final Intent intent = this.cordova.getActivity().getIntent();
       Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CHECKINTENT - intent:  " + intent.toString());
 
       try {
         Bundle data = intent.getExtras();
-        Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CHECKINTENT - bundle:  " + data.toString());
+        if (data != null) {
+          Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CHECKINTENT - bundle:  " + data.toString());
+          if (data.containsKey("deeplink")) {
+            intentDeeplinkString = data.getString("deeplink");
+            Log.d("cordova-plugin-customurlscheme", "App was started with action ACTION_CHECKINTENT - bundle deeplinkString:  " + intentDeeplinkString);
+            callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, intentDeeplinkString));
+          }
+        }
       } catch (Exception e) {
         e.printStackTrace();
         Log.d("cordova-plugin-customurlscheme", "error parsing bundle: ", e);
